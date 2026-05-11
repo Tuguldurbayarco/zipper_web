@@ -1,0 +1,311 @@
+:root {
+  --bg: #0c0d10;
+  --surface: #16181d;
+  --border: #2a2d35;
+  --text: #e8eaef;
+  --muted: #8b919d;
+  --accent: #6ee7b7;
+  --accent-dim: #34d399;
+  --error: #f87171;
+  --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--font);
+  background: radial-gradient(
+      ellipse 120% 80% at 50% -20%,
+      #1a2332 0%,
+      var(--bg) 55%
+    ),
+    var(--bg);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.panel {
+  width: 100%;
+  max-width: 28rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.75rem;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.35);
+}
+
+h1 {
+  margin: 0 0 0.35rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.version-tag {
+  margin: 0 0 0.65rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--accent);
+  letter-spacing: 0.02em;
+}
+
+p.sub {
+  margin: 0 0 1.25rem;
+  font-size: 0.875rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--muted);
+  margin-bottom: 0.35rem;
+}
+
+.pw-field-wrap {
+  position: relative;
+  display: block;
+}
+
+input.pw-field {
+  width: 100%;
+  padding: 0.65rem 2.75rem 0.65rem 0.75rem;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+input.pw-field:focus {
+  border-color: var(--accent-dim);
+}
+
+.pw-field-wrap:focus-within input.pw-field {
+  border-color: var(--accent-dim);
+}
+
+button.pw-toggle {
+  position: absolute;
+  right: 0.25rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  margin: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: color 0.15s, background-color 0.15s, opacity 0.15s;
+}
+
+button.pw-toggle:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.06);
+  opacity: 1;
+}
+
+button.pw-toggle:focus-visible {
+  outline: 2px solid var(--accent-dim);
+  outline-offset: 2px;
+}
+
+.pw-toggle-sprite {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+button.pw-toggle svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+}
+
+.row {
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+button {
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 8px;
+  border: none;
+  padding: 0.65rem 1rem;
+  transition: opacity 0.15s, transform 0.1s;
+}
+
+/* Do not use transform here on .pw-toggle — it relies on translateY(-50%) for vertical centering. */
+button:active:not(.pw-toggle) {
+  transform: scale(0.98);
+}
+
+button.primary {
+  background: linear-gradient(135deg, #34d399, #059669);
+  color: #042f1f;
+}
+
+button.primary:hover {
+  opacity: 0.92;
+}
+
+button.secondary {
+  background: var(--border);
+  color: var(--text);
+}
+
+button.secondary:hover {
+  opacity: 0.9;
+}
+
+.msg {
+  margin-top: 0.75rem;
+  font-size: 0.8125rem;
+  min-height: 1.25rem;
+}
+
+.msg.error {
+  color: var(--error);
+}
+
+.hidden {
+  display: none !important;
+}
+
+#unlocked {
+  text-align: center;
+  max-width: 46rem;
+  width: 100%;
+}
+
+#unlocked .version-tag {
+  margin: 0 0 1.25rem;
+}
+
+.file-grid {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+  align-items: stretch;
+}
+
+.file-card {
+  flex: 1 1 16rem;
+  max-width: 22rem;
+  min-width: min(100%, 15rem);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.25rem 1.1rem;
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.file-card .file-name {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 0 0 0.35rem;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+}
+
+.file-card .file-platform {
+  margin: 0 0 0.85rem;
+  padding: 0.35rem 0.65rem;
+  max-width: 100%;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--muted);
+  text-align: center;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.file-card .link-wrap {
+  width: 100%;
+  word-break: break-all;
+  font-size: 0.8125rem;
+  color: var(--muted);
+  margin-bottom: 1rem;
+  padding: 0.75rem 0.85rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  text-align: left;
+  flex: 1 1 auto;
+  min-height: 3.25rem;
+  display: flex;
+  align-items: center;
+}
+
+.file-card .link-wrap a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.file-card .link-wrap a:hover {
+  text-decoration: underline;
+}
+
+.file-card .link-wrap.coming-soon {
+  justify-content: center;
+  text-align: center;
+  font-style: italic;
+  color: var(--muted);
+}
+
+.file-card .copy-hint {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin: 0.5rem 0 0;
+  min-height: 1.25rem;
+  width: 100%;
+}
+
+.file-card .copy-hint.ok {
+  color: var(--accent);
+}
+
+.file-card .copy-hint.error {
+  color: var(--error);
+}
+
+button.primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+button.primary:disabled:hover {
+  opacity: 0.45;
+}

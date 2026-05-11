@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Zipper download</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <section id="gate" class="panel" aria-labelledby="gate-title">
+      <h1 id="gate-title">Gerelt Zipper</h1>
+      <p class="sub">Enter the password to open the download link.</p>
+      <form id="pw-form" autocomplete="on">
+        <label for="password">Password</label>
+        <div class="pw-field-wrap">
+          <input
+            class="pw-field"
+            id="password"
+            name="password"
+            type="password"
+            required
+            autocomplete="current-password"
+            autofocus
+          />
+          <button
+            type="button"
+            class="pw-toggle"
+            id="pw-toggle"
+            aria-label="Show password"
+            aria-pressed="false"
+          >
+            <span class="pw-toggle-sprite" id="pw-wrap-reveal" aria-hidden="true">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="1.75"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"
+                />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+              </svg>
+            </span>
+            <span class="pw-toggle-sprite hidden" id="pw-wrap-conceal" aria-hidden="true">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="1.75"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"
+                />
+              </svg>
+            </span>
+          </button>
+        </div>
+        <div class="row">
+          <button type="submit" class="primary">Continue</button>
+        </div>
+        <div id="pw-msg" class="msg" role="status"></div>
+      </form>
+    </section>
+
+    <section id="unlocked" class="hidden" aria-live="polite">
+      <p class="version-tag hidden" id="version-unlocked"></p>
+      <div class="file-grid" id="file-grid" aria-label="Downloads"></div>
+    </section>
+
+    <script>
+      (function () {
+        /**
+         * Each entry: { name, url, platform? }.
+         * platform — short OS line under the title (e.g. Mac chip list, "Windows").
+         * Leave url empty until ready — card shows "Coming soon" and copy is disabled.
+         */
+        var DOWNLOAD_FILES = [
+          {
+            name: "Zipper.dmg",
+            url: "https://drive.google.com/file/d/1I4abJx3xuLydfTmAm4fPZ7hdEIXjYOUh/view?usp=drive_link",
+            platform: "MacBook · Apple Silicon (M1, M2, M3, M4, M5)",
+          },
+          {
+            name: "Second file",
+            url: "",
+            platform: "Windows",
+          },
+        ];
+
+        /** Bump this when you ship a new DMG so people see a new build is up. */
+        var ZIPPER_VERSION = "1.1.4";
+
+        var EXPECTED_PW_SHA256_HEX =
+          "7dc9434bdccb16e729b0d8fe219d204fd58c56abbf14d9fecaed22ee069cb527";
+
+        var AUTH_KEY = "zipper_unlocked_v2";
+
+        function hex(buf) {
+          return Array.from(new Uint8Array(buf))
+            .map(function (b) {
+              return b.toString(16).padStart(2, "0");
+            })
+            .join("");
+        }
+
+        async function sha256Hex(str) {
+          var data = new TextEncoder().encode(str);
+          var hash = await crypto.subtle.digest("SHA-256", data);
+          return hex(hash);
+        }
+
+        var gate = document.getElementById("gate");
+        var unlocked = document.getElementById("unlocked");
+        var form = document.getElementById("pw-form");
+        var pwInput = document.getElementById("password");
+        var pwToggle = document.getElementById("pw-toggle");
+        var pwWrapReveal = document.getElementById("pw-wrap-reveal");
+        var pwWrapConceal = document.getElementById("pw-wrap-conceal");
+        var pwMsg = document.getElementById("pw-msg");
+        var fileGrid = document.getElementById("file-grid");
+        var versionUnlocked = document.getElementById("version-unlocked");
+
+        function renderDownloadCards() {
+          fileGrid.textContent = "";
+          DOWNLOAD_FILES.forEach(function (item) {
+            var url = (item.url || "").trim();
+            var name = (item.name || "Download").trim() || "Download";
+            var ready = url.length > 0;
+
+            var card = document.createElement("article");
+            card.className = "file-card";
+            card.setAttribute("aria-label", name);
+
+            var title = document.createElement("h2");
+            title.className = "file-name";
+            title.textContent = name;
+            card.appendChild(title);
+
+            var plat = (item.platform || "").trim();
+            if (plat) {
+              var platEl = document.createElement("p");
+              platEl.className = "file-platform";
+              platEl.textContent = plat;
+              card.appendChild(platEl);
+            }
+
+            var linkBox = document.createElement("div");
+            linkBox.className = "link-wrap" + (ready ? "" : " coming-soon");
+            if (ready) {
+              var a = document.createElement("a");
+              a.href = url;
+              a.target = "_blank";
+              a.rel = "noopener noreferrer";
+              a.textContent = url;
+              linkBox.appendChild(a);
+            } else {
+              linkBox.textContent = "Coming soon";
+            }
+            card.appendChild(linkBox);
+
+            var copyBtn = document.createElement("button");
+            copyBtn.type = "button";
+            copyBtn.className = "primary";
+            copyBtn.textContent = "Copy link";
+            copyBtn.disabled = !ready;
+            copyBtn.setAttribute("data-copy-url", url);
+            if (!ready) {
+              copyBtn.setAttribute("aria-disabled", "true");
+              copyBtn.title = "Link not available yet";
+            }
+            card.appendChild(copyBtn);
+
+            var hint = document.createElement("p");
+            hint.className = "copy-hint";
+            hint.setAttribute("aria-live", "polite");
+            card.appendChild(hint);
+
+            fileGrid.appendChild(card);
+          });
+        }
+
+        function showUnlocked() {
+          var v = (ZIPPER_VERSION || "").trim();
+          if (v) {
+            versionUnlocked.textContent = "Version " + v;
+            versionUnlocked.classList.remove("hidden");
+            document.title = "Zipper download · v" + v;
+          } else {
+            versionUnlocked.textContent = "";
+            versionUnlocked.classList.add("hidden");
+            document.title = "Zipper download";
+          }
+          renderDownloadCards();
+          gate.classList.add("hidden");
+          unlocked.classList.remove("hidden");
+          sessionStorage.setItem(AUTH_KEY, "1");
+        }
+
+        if (sessionStorage.getItem(AUTH_KEY) === "1") {
+          showUnlocked();
+        }
+
+        function syncPasswordToggleUi() {
+          var isMasked = pwInput.type === "password";
+          pwWrapReveal.classList.toggle("hidden", !isMasked);
+          pwWrapConceal.classList.toggle("hidden", isMasked);
+          pwToggle.setAttribute("aria-label", isMasked ? "Show password" : "Hide password");
+          pwToggle.setAttribute("aria-pressed", isMasked ? "false" : "true");
+        }
+
+        syncPasswordToggleUi();
+
+        pwToggle.addEventListener("click", function () {
+          if (pwInput.type === "password") {
+            pwInput.type = "text";
+          } else {
+            pwInput.type = "password";
+          }
+          syncPasswordToggleUi();
+          pwInput.focus();
+        });
+
+        form.addEventListener("submit", async function (e) {
+          e.preventDefault();
+          pwMsg.textContent = "";
+          pwMsg.className = "msg";
+          var entered = pwInput.value;
+          var got = await sha256Hex(entered);
+          if (got === EXPECTED_PW_SHA256_HEX) {
+            showUnlocked();
+          } else {
+            pwMsg.textContent = "Wrong password. Try again.";
+            pwMsg.className = "msg error";
+          }
+        });
+
+        fileGrid.addEventListener("click", async function (e) {
+          var btn = e.target.closest("button[data-copy-url]");
+          if (!btn || btn.disabled) return;
+          var url = (btn.getAttribute("data-copy-url") || "").trim();
+          if (!url) return;
+          var card = btn.closest(".file-card");
+          var hint = card && card.querySelector(".copy-hint");
+          if (!hint) return;
+          hint.textContent = "";
+          hint.className = "copy-hint";
+          try {
+            await navigator.clipboard.writeText(url);
+            hint.textContent = "Copied to clipboard.";
+            hint.className = "copy-hint ok";
+          } catch (err) {
+            hint.textContent =
+              "Could not copy automatically. Select the link and copy manually.";
+            hint.className = "copy-hint error";
+          }
+        });
+      })();
+    </script>
+  </body>
+</html>
